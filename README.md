@@ -1,6 +1,5 @@
 # Market Trends Analysis & Context Engineering for Multi-Agent Workflows
 
-## TechXConf 2025 - AI Agent Presentations
 
 This repository contains comprehensive materials for two advanced AI agent presentations focusing on context engineering, AgentCore Memory, and multi-agent workflow orchestration with **production-ready implementations**.
 
@@ -10,14 +9,12 @@ This repository contains comprehensive materials for two advanced AI agent prese
 
 ### 🎯 Presentation 1: Market Trends Agent with Context Engineering
 **File**: `PRESENTATION_MarketTrends_Analyst_REVISED.md`
-- **Duration**: 50 minutes (30 slides)
 - **Focus**: Real-time financial intelligence with persistent memory
 - **Technologies**: Strands Framework, AgentCore Memory, AgentCore Runtime, Claude Sonnet 4
 - **Status**: ✅ **Production Deployed & Working**
 
 ### 🔄 Presentation 2: Multi-Agent Workflow Orchestration
 **File**: `PRESENTATION_Context_Engineering_MultiAgent.md`
-- **Duration**: 50 minutes (20 slides)
 - **Focus**: Context engineering strategies for coordinated multi-agent systems
 - **Industries**: Finance, Healthcare, Logistics
 
@@ -60,7 +57,7 @@ Traditional AI agents lose context between sessions, cannot learn from broker pr
 - **Claude Sonnet 4**: Advanced reasoning and analysis
 
 ### Memory Strategy Configuration
-**Memory ID**: `runtime_us_market_agent_8e082e5c_mem-B1ZetpF2X2`
+**Memory ID**: `runtime_us_market_agent_8e082e5c_****`
 
 **Active Strategies:**
 1. **🧠 Semantic Memory** (`brokerProfiles-1jgWLn2v1c`)
@@ -68,7 +65,7 @@ Traditional AI agents lose context between sessions, cannot learn from broker pr
    - **Namespace**: `/profiles/{actorId}` 
    - **Use**: Stores broker knowledge, market analysis patterns, investment strategies
 
-2. **👤 User Preference Memory** (`investmentPreferences-6V2wLt2Rvz`)
+2. **👤 User Preference Memory** (`investmentPreferences-***`)
    - **Purpose**: Learns broker investment styles and risk tolerance
    - **Namespace**: `/preferences/{actorId}`
    - **Use**: Tracks individual broker preferences, risk profiles, sector preferences
