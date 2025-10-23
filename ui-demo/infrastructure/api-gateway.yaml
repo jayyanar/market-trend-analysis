@@ -1,0 +1,235 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'API Gateway and Lambda for AgentCore Memory Demo'
+
+Parameters:
+  MemoryId:
+    Type: String
+    Default: 'runtime_us_market_agent_8e082e5c_mem-B1ZetpF2X2'
+    Description: 'AgentCore Memory ID'
+  
+  RuntimeId:
+    Type: String
+    Default: 'runtime_us_market_agent_8e082e5c-HYMo6FF9Qn'
+    Description: 'AgentCore Runtime ID'
+
+Resources:
+  # Lambda Execution Role
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockAgentCoreAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeAgent
+                  - bedrock:RetrieveMemory
+                  - bedrock-agent-runtime:*
+                Resource: '*'
+
+  # Lambda Function
+  AgentCoreProxyFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: agentcore-memory-demo-proxy
+      Runtime: nodejs18.x
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          MEMORY_ID: !Ref MemoryId
+          RUNTIME_ID: !Ref RuntimeId
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          
+          const MEMORY_ID = process.env.MEMORY_ID;
+          const RUNTIME_ID = process.env.RUNTIME_ID;
+          
+          const bedrockAgentRuntime = new AWS.BedrockAgentRuntime({
+            region: 'us-east-1'
+          });
+          
+          exports.handler = async (event) => {
+            const headers = {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'Content-Type',
+              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+              'Content-Type': 'application/json'
+            };
+          
+            if (event.httpMethod === 'OPTIONS') {
+              return { statusCode: 200, headers, body: '' };
+            }
+          
+            try {
+              const path = event.path;
+              const method = event.httpMethod;
+          
+              if (method === 'POST' && path === '/invoke') {
+                const body = JSON.parse(event.body);
+                const { prompt, actor_id, session_id } = body;
+                
+                return {
+                  statusCode: 200,
+                  headers,
+                  body: JSON.stringify({
+                    response: [`Thank you ${actor_id}. Processing: ${prompt}`],
+                    actor_id,
+                    session_id
+                  })
+                };
+              } else if (method === 'GET' && path.startsWith('/memory/')) {
+                const actorId = path.split('/').pop();
+                
+                return {
+                  statusCode: 200,
+                  headers,
+                  body: JSON.stringify({
+                    actor_id: actorId,
+                    memories: [],
+                    memory_count: 0,
+                    last_updated: new Date().toISOString()
+                  })
+                };
+              }
+              
+              return {
+                statusCode: 404,
+                headers,
+                body: JSON.stringify({ error: 'Not found' })
+              };
+            } catch (error) {
+              return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ error: error.message })
+              };
+            }
+          };
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: agentcore-memory-demo-api
+      Description: API for AgentCore Memory Demo
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resources
+  InvokeResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: invoke
+
+  MemoryResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: memory
+
+  MemoryActorResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !Ref MemoryResource
+      PathPart: '{actorId}'
+
+  # API Gateway Methods
+  InvokeMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref InvokeResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AgentCoreProxyFunction.Arn}/invocations'
+
+  MemoryMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref MemoryActorResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AgentCoreProxyFunction.Arn}/invocations'
+
+  # CORS Options Methods
+  InvokeOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref InvokeResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AgentCoreProxyFunction.Arn}/invocations'
+
+  MemoryOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref MemoryActorResource
+      HttpMethod: OPTIONS
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AgentCoreProxyFunction.Arn}/invocations'
+
+  # Lambda Permissions
+  InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AgentCoreProxyFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub '${ApiGateway}/*/*'
+
+  # API Gateway Deployment
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - InvokeMethod
+      - MemoryMethod
+      - InvokeOptionsMethod
+      - MemoryOptionsMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: prod
+
+Outputs:
+  ApiGatewayUrl:
+    Description: 'API Gateway URL'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiGatewayUrl'
+
+  LambdaFunctionArn:
+    Description: 'Lambda Function ARN'
+    Value: !GetAtt AgentCoreProxyFunction.Arn
