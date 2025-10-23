@@ -59,6 +59,20 @@ Traditional AI agents lose context between sessions, cannot learn from broker pr
 - **Strands Framework**: Pythonic agent development and orchestration
 - **Claude Sonnet 4**: Advanced reasoning and analysis
 
+### Memory Strategy Configuration
+**Memory ID**: `runtime_us_market_agent_8e082e5c_mem-B1ZetpF2X2`
+
+**Active Strategies:**
+1. **🧠 Semantic Memory** (`brokerProfiles-1jgWLn2v1c`)
+   - **Purpose**: Captures broker expertise and market insights
+   - **Namespace**: `/profiles/{actorId}` 
+   - **Use**: Stores broker knowledge, market analysis patterns, investment strategies
+
+2. **👤 User Preference Memory** (`investmentPreferences-6V2wLt2Rvz`)
+   - **Purpose**: Learns broker investment styles and risk tolerance
+   - **Namespace**: `/preferences/{actorId}`
+   - **Use**: Tracks individual broker preferences, risk profiles, sector preferences
+
 ### Production Implementation Features
 1. **Broker Onboarding**: Automatic profile creation and personalization
 2. **Real-Time Stock Analysis**: Live Yahoo Finance API integration
@@ -364,10 +378,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **v1.0.0** (2025-01-23): ✅ Production deployment successful
 - **v1.1.0** (2025-01-23): ✅ Memory operations working
 - **v1.2.0** (2025-01-23): ✅ HTTP-based tools implemented
+- **v1.3.0** (2025-01-23): ✅ Memory strategies configured (Semantic + User Preference)
 
 ### Deployment Status
 - ✅ **AgentCore Runtime**: Deployed and operational
 - ✅ **Memory Integration**: Broker profiles saving/retrieving
+- ✅ **Memory Strategies**: Semantic + User Preference configured
 - ✅ **Real-time Data**: Yahoo Finance API working
 - ✅ **Error Handling**: Graceful fallbacks implemented
 - ✅ **Performance**: 2-4 second response times achieved
