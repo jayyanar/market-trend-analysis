@@ -1,0 +1,42 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Development files
+*.log
+*.swp
+*~
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Version control
+.git/
+.gitignore
+
+# Documentation (keep README)
+docs/
+*.md
+!README.md
+
+# Testing
+tests/
+.pytest_cache/
+
+# Jupyter notebooks
+*.ipynb
+
+# Generated diagrams (large files)
+generated-diagrams/
+
+# Presentation files
+PRESENTATION_*.md
